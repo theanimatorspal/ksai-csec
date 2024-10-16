@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup, Doctype, Comment
 from urllib.parse import urlparse, urljoin
 import time
 
-def ExtractAllMetaDataFrom(site, max_depth, filename):
+def Run(site, max_depth, filename):
     # Configure Selenium WebDriver for headless Chrome
     options = Options()
     options.headless = True  # Run in headless mode
@@ -70,7 +70,7 @@ def ExtractAllMetaDataFrom(site, max_depth, filename):
             return  # Skip if already visited or max depth reached
 
         visited_pages.add(url)  # Mark the current URL as visited
-
+        file.write(f"URL: {url}\n")
         try:
             driver.get(url)
             time.sleep(2)  # Allow page to load

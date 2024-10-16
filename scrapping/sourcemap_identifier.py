@@ -5,7 +5,7 @@ import requests
 import time
 import re
 
-def identify_sourcemaps(site):
+def Run(site):
     """
     Identifies source map files from a given website by looking at the <script> tags and inspecting JS files.
 
