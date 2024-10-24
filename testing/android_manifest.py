@@ -1,47 +1,57 @@
 import xml.etree.ElementTree as ET
 
-# Function to parse AndroidManifest.xml
+# Function to parse AndroidManifest.xml and analyze it
 def Run(file_path, output_file):
     try:
+        # Parse the XML file
         tree = ET.parse(file_path)
         root = tree.getroot()
 
-        # Android XML namespaces
+        # Android namespace
         namespace = {'android': 'http://schemas.android.com/apk/res/android'}
 
+        # Dictionary to store the exported components
         exported_components = {
             'activities': [],
             'services': [],
             'receivers': []
         }
 
+        # List to store permissions
         permissions = []
 
-        # Analyze components
+        # Helper function to get the value of an attribute from the Android namespace
+        def get_android_attribute(element, attribute):
+            return element.get(f"{{{namespace['android']}}}{attribute}")
+
+        # Analyze the exported components (activities, services, receivers)
         for component_type in ['activity', 'service', 'receiver']:
             for component in root.findall(f".//{component_type}"):
-                exported = component.get(f"{{{namespace['android']}}}exported")
+                exported = get_android_attribute(component, 'exported')
                 if exported == 'true':
-                    component_name = component.get(f"{{{namespace['android']}}}name")
+                    component_name = get_android_attribute(component, 'name')
                     if component_name:
-                        exported_components[component_type + 's'].append(component_name)
+                        if component_type == 'activity':
+                            exported_components['activities'].append(component_name)
+                        else:
+                            exported_components[component_type + 's'].append(component_name)
 
-        # Get all permissions in readable format
+        # Analyze permissions
         for permission in root.findall('uses-permission'):
-            permission_name = permission.get(f"{{{namespace['android']}}}name")
+            permission_name = get_android_attribute(permission, 'name')
             if permission_name:
                 permissions.append(permission_name)
 
-        # Write the results to a file
+        # Write the analysis to the output file
         with open(output_file, 'w') as f:
             f.write("=== Exported Components ===\n")
-            
+
             f.write("\nActivities (exported=true):\n")
             if exported_components['activities']:
                 f.writelines(f"- {activity}\n" for activity in exported_components['activities'])
             else:
                 f.write("No exported activities found.\n")
-            
+
             f.write("\nServices (exported=true):\n")
             if exported_components['services']:
                 f.writelines(f"- {service}\n" for service in exported_components['services'])
@@ -62,5 +72,9 @@ def Run(file_path, output_file):
 
         print(f"Analysis saved to {output_file}")
 
+    except ET.ParseError as parse_err:
+        print(f"Error parsing XML: {parse_err}")
+    except FileNotFoundError:
+        print(f"Error: The file {file_path} does not exist.")
     except Exception as e:
-        print(f"Error analyzing manifest file: {e}")
+        print(f"Unexpected error: {e}")

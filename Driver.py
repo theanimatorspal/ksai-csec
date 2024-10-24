@@ -13,3 +13,6 @@
 # # cross_site_tracing.Run("http://127.0.0.1:3000")
 # # http_method_override.Run("http://127.0.0.1:3000")
 # # ria_cross_domain_policy.Run("127.0.0.1:3000", "jshop/")
+from testing import android_manifest
+
+android_manifest.Run("targets/eero/AndroidManifest.xml", "targets/eero/manifest_analysis.txt")
