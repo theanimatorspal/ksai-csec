@@ -1,0 +1,16 @@
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     https://ring.com
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                lists/content_discovery.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+
+Error: the server returns a status code that matches the provided options for non existing urls. https://ring.com/0280af1f-d1ff-40a5-a69a-46b6f2fef7fc => 406 (Length: 14). To continue please exclude the status code or the length

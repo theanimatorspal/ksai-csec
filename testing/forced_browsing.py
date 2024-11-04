@@ -16,9 +16,9 @@ def Run(domain, filepath, wordlist):
 
     # List of commands for each tool with the wordlist
     tools = [
-        f"ffuf -w {wordlist} -u {domain}/FUZZ -o {filepath}_ffuf.json -of json",  # ffuf (JSON format)
-        f"gobuster dir -u {domain} -w {wordlist} -o {filepath}_gobuster.txt",      # gobuster (TXT format)
-        f"dirsearch -u {domain} -w {wordlist} -e all -o {filepath}_dirsearch.txt"  # dirsearch (TXT format)
+        #f"ffuf -w {wordlist} -u {domain}/FUZZ -o {filepath}_ffuf.json -of json -r -rate 5",  # ffuf (JSON format)
+        #f"gobuster dir -u {domain} -w {wordlist} -o {filepath}_gobuster.txt",      # gobuster (TXT format)
+        #f"dirsearch -u {domain} -w {wordlist} -e all -o {filepath}_dirsearch.txt"  # dirsearch (TXT format)
     ]
     
     # Run each tool command
