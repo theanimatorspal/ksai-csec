@@ -1,4 +1,4 @@
-const MAX_DEPTH = 2;
+let MAX_DEPTH = 1;
 var Logs = ""
 Logs = Logs + "========= LOGS BEGIN =========\n";
 
@@ -27,13 +27,17 @@ function resumeAllFailedDownloads() {
 }
 
 function saveToFile(filename, content) {
-     const dataUrl = `data:text/plain;base64,${btoa(content)}`;
+     // Convert content to UTF-8 and then to Base64
+     const utf8Content = new TextEncoder().encode(content);
+     const base64Content = btoa(String.fromCharCode(...utf8Content));
+     const dataUrl = `data:text/plain;base64,${base64Content}`;
+
      chrome.downloads.download({
           url: dataUrl,
           filename: filename,
           saveAs: true
      }, () => {
-          console.log("File saved successfully");
+          console.log("File saved successfully.");
      });
 }
 
@@ -41,60 +45,90 @@ function saveToFile(filename, content) {
 function extractMetadataAndLinks(depth) {
      function extractMetadata() {
           const metadata = [];
+          const warnings = [];
 
-          // Get DOCTYPE
+          // Capture DOCTYPE
           if (document.doctype) {
-               metadata.push(`DOCTYPE: ${document.doctype.name}`);
+               metadata.push(`\tDOCTYPE: ${document.doctype.name}`);
+          } else {
+               warnings.push("\tWarning: Missing DOCTYPE");
           }
 
-          // Extract meta tags
+          // Extract meta tags with additional checks for security-relevant headers
           document.querySelectorAll("meta").forEach(meta => {
-               const name = meta.getAttribute("name");
+               const name = meta.getAttribute("name") || meta.getAttribute("property");
                const content = meta.getAttribute("content");
                if (name && content) {
-                    metadata.push(`Meta name: ${name}, content: ${content}`);
+                    metadata.push(`\tMeta - Name/Property: ${name}, Content: ${content}`);
+                    if (name.toLowerCase() === "description" && content.toLowerCase().includes("password")) {
+                         warnings.push("\tPotentially sensitive information in meta description.");
+                    }
                }
           });
 
-          // Extract link tags
+          // Extract link tags with security-relevant attributes
           document.querySelectorAll("link[rel]").forEach(link => {
                const rel = link.getAttribute("rel");
                const href = link.getAttribute("href");
+               const integrity = link.getAttribute("integrity");
+               const crossorigin = link.getAttribute("crossorigin");
                if (rel && href) {
-                    metadata.push(`Link rel: ${rel}, href: ${href}`);
+                    let linkInfo = `\tLink - Rel: ${rel}, Href: ${href}`;
+                    if (integrity) linkInfo += `, Integrity: ${integrity}`;
+                    if (crossorigin) linkInfo += `, Crossorigin: ${crossorigin}`;
+                    metadata.push(linkInfo);
                }
           });
 
-          // Extract comments
+          // Extract comments and flag any suspicious content
           const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null, false);
           while (walker.nextNode()) {
                const comment = walker.currentNode.nodeValue.trim();
                if (comment) {
-                    metadata.push(`Comment: ${comment}`);
+                    metadata.push(`\tComment: ${comment}`);
+                    if (/TODO|FIXME|HACK/i.test(comment)) {
+                         warnings.push(`\tSuspicious comment found: "${comment}"`);
+                    }
                }
           }
 
-          // Extract scripts (both inline and external)
+          // Extract scripts with enhanced inspection
           document.querySelectorAll("script").forEach(script => {
                const src = script.getAttribute("src");
+               const integrity = script.getAttribute("integrity");
+               const crossorigin = script.getAttribute("crossorigin");
+
                if (src) {
-                    metadata.push(`External Script src: ${src}`);
+                    let scriptInfo = `\tExternal Script - Src: ${src}`;
+                    if (integrity) scriptInfo += `, Integrity: ${integrity}`;
+                    if (crossorigin) scriptInfo += `, Crossorigin: ${crossorigin}`;
+                    metadata.push(scriptInfo);
+
+                    // Potential issue with untrusted src
+                    if (!integrity) warnings.push(`\tExternal script without integrity attribute: ${src}`);
                } else {
-                    metadata.push(`Inline Script: ${script.innerHTML.slice(0, 100)}...`);
+                    const inlineContent = script.innerHTML.trim();
+                    metadata.push(`\tInline Script: ${inlineContent}`);
+
+                    // Flag risky JavaScript patterns
+                    if (/eval|innerHTML|document\.write|setTimeout|setInterval/i.test(inlineContent)) {
+                         warnings.push("\tRisky inline JavaScript detected (e.g., eval, document.write, etc.).");
+                    }
                }
           });
 
-          var vLogs = ""
-          // Return metadata as a single formatted string
-          console.log(metadata.join("\n"));
-          vLogs = vLogs + metadata.join("\n");
-          vLogs = vLogs + "\n";
-          return vLogs;
+          // Log the metadata and warnings
+          console.log("===== Metadata Extracted =====\n" + metadata.join("\n"));
+          if (warnings.length > 0) {
+               console.log("\n===== Potential Issues Detected =====\n" + warnings.join("\n"));
+          }
+
+          // Return combined log
+          return metadata.concat(warnings).join("\n");
      }
 
      var vLogs = ""
-     vLogs = vLogs + `METADATA OF LINK (Depth ${depth}): ${window.location.href}\n`;
-     console.log("MetaData SHIT============");
+     vLogs = vLogs + `(Depth ${depth}): ${window.location.href}\n`;
      vLogs = vLogs + extractMetadata(vLogs);
      const links = [...new Set([...document.querySelectorAll('a[href]')].map(link => link.href))];
      links.forEach(link => {
@@ -102,6 +136,39 @@ function extractMetadataAndLinks(depth) {
      });
      return vLogs
 }
+
+async function waitForTabsAndExecute(url, depth) {
+     const allTabs = await chrome.tabs.query({});
+     const tabCount = allTabs.length;
+
+     if (tabCount < 4) {
+          const tab = await chrome.tabs.create({ url: url, active: false });
+          Logs += "Tab: " + tab.id.toString() + "\n";
+
+          chrome.tabs.onUpdated.addListener(async function listener(tabId, info) {
+               if (tabId === tab.id && info.status === 'complete') {
+                    const tabInfo = await chrome.tabs.get(tab.id);
+
+                    // Check if the URL is allowed for scripting
+                    if (!tabInfo.url.startsWith("chrome://") && !tabInfo.url.startsWith("about:")) {
+                         const [{ result }] = await chrome.scripting.executeScript({
+                              target: { tabId: tab.id },
+                              func: extractMetadataAndLinks,
+                              args: [depth]
+                         });
+                         Logs += result + "\n";
+                    } else {
+                         Logs += `Skipped restricted URL: ${tabInfo.url}\n`;
+                    }
+
+                    // Close the tab and remove the listener
+                    chrome.tabs.remove(tab.id);
+                    chrome.tabs.onUpdated.removeListener(listener);
+               }
+          });
+     }
+}
+
 
 chrome.runtime.onMessage.addListener(
      async function (arg, sender, sendResponse) {
@@ -122,26 +189,13 @@ chrome.runtime.onMessage.addListener(
                          sendResponse({ success: true, downloadId: downloadId });
                     }
                });
+          }
+          else if (arg.type == "changeDepthValueForExtraction") {
+               MAX_DEPTH = arg.depth;
           } else if (arg.type == "extractMetadata") {
                const { url, depth } = arg;
-
                if (depth <= MAX_DEPTH) {
-                    chrome.tabs.create({ url: url, active: false }, (tab) => {
-                         Logs = Logs + "Tab: " + toString(tab.id) + "\n";
-                         console.log("Adding Listener to tab", tab.id);
-                         chrome.tabs.onUpdated.addListener(async function listener(tabId, info) {
-                              if (tabId === tab.id && info.status === 'complete') {
-                                   const [{ result }] = await chrome.scripting.executeScript({
-                                        target: { tabId: tab.id },
-                                        func: extractMetadataAndLinks,
-                                        args: [depth]
-                                   });
-                                   Logs = Logs + result + "\n";
-                                   chrome.tabs.remove(tab.id);
-                                   chrome.tabs.onUpdated.removeListener(listener);
-                              }
-                         });
-                    });
+                    await waitForTabsAndExecute(url, depth)
                }
           }
           else if (arg.type == "extractMetadataByMessage") {
@@ -156,14 +210,44 @@ chrome.runtime.onMessage.addListener(
                resumeAllFailedDownloads();
           }
           else if (arg.type == "copyLogsToClipboard") {
-               alert(Logs)
+               chrome.scripting.executeScript({
+                    target: { tabId: arg.tab.id },
+                    func: async (logs) => {
+                         await navigator.clipboard.writeText(logs);
+                    },
+                    args: [Logs]
+               });
           }
           else if (arg.type == "saveLogsToFile") {
-               Logs = Logs + "========= LOGS END =========";
+               Logs = Logs + "========= LOGS END ========= \n";
                saveToFile("file.txt", Logs)
           }
           else if (arg.type == "resetEverything") {
                Logs = " ========= LOGS BEGIN ========= \n";
+          }
+          else if (arg.type == "setProxy") {
+               const [address, port] = arg.address.split(":");
+               const config = {
+                    mode: "fixed_servers",
+                    rules: {
+                         singleProxy: {
+                              scheme: arg.scheme,
+                              host: address,
+                              port: parseInt(port, 10)
+                         },
+                         bypassList: ["<local>"]
+                    }
+               };
+               chrome.proxy.settings.set(
+                    { value: config, scope: "regular" },
+                    () => {
+                         console.log("Proxy settings applied");
+                    }
+               )
+          } else if (arg.type == "resetProxy") {
+               chrome.proxy.settings.clear({ scope: "regular" }, () => {
+                    console.log("Proxy settings cleared");
+               });
           }
      }
 );

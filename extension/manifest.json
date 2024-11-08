@@ -1,27 +1,28 @@
 {
-          "manifest_version": 3,
-          "name": "Csec Stuff",
-          "version": "1.0",
-          "description": "Person Csec extension",
-          "permissions": [
-                    "notifications",
-                    "clipboardRead",
-                    "clipboardWrite",
-                    "contextMenus",
-                    "activeTab",
-                    "tabs",
-                    "scripting",
-                    "storage",
-                    "downloads",
-                    "background"
-          ],
-          "host_permissions": [
-                    "<all_urls>"
-          ],
-          "action": {
-                    "default_popup": "popup.html"
-          },
-          "background": {
-                    "service_worker": "background.js"
-          }
+     "manifest_version": 3,
+     "name": "Csec Stuff",
+     "version": "1.0",
+     "description": "Person Csec extension",
+     "permissions": [
+          "notifications",
+          "clipboardRead",
+          "clipboardWrite",
+          "contextMenus",
+          "activeTab",
+          "tabs",
+          "scripting",
+          "proxy",
+          "storage",
+          "downloads",
+          "background"
+     ],
+     "host_permissions": [
+          "<all_urls>"
+     ],
+     "action": {
+          "default_popup": "popup.html"
+     },
+     "background": {
+          "service_worker": "background.js"
+     }
 }

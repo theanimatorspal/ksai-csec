@@ -1,3 +1,7 @@
+
+
+
+
 document.getElementById("startDorking").addEventListener("click", () => {
      const targetDomain = document.getElementById("domainInput").value.trim();
 
@@ -100,6 +104,12 @@ document.getElementById("startBrowsing").addEventListener("click", () => {
      })
 });
 
+document.getElementById("spinnerExtractDepth").addEventListener("change", async () => {
+     const spinnerValue = document.getElementById("spinnerExtractDepth").value;
+     chrome.runtime.sendMessage({ type: "changeDepthValueForExtraction", depth: spinnerValue });
+});
+
+
 document.getElementById("startExtracting").addEventListener("click", async () => {
      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
      chrome.runtime.sendMessage({ type: "extractMetadataByMessage", tab: tab, depth: 1 });
@@ -129,9 +139,34 @@ document.getElementById("resetEverything").addEventListener("click", async () =>
 });
 
 document.getElementById("copyLogsToClipboard").addEventListener("click", async () => {
-     chrome.runtime.sendMessage({ type: "copyLogsToClipboard" });
+     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+     chrome.runtime.sendMessage({ type: "copyLogsToClipboard", tab: tab });
 });
 
 document.getElementById("saveLogsToFile").addEventListener("click", async () => {
      chrome.runtime.sendMessage({ type: "saveLogsToFile" });
+});
+
+
+const proxyInput = document.getElementById("proxy-address");
+const schemeSelect = document.getElementById("scheme");
+
+window.addEventListener("DOMContentLoaded", () => {
+     const savedProxy = localStorage.getItem("proxyAddress");
+     const savedScheme = localStorage.getItem("scheme");
+
+     if (savedProxy) proxyInput.value = savedProxy;
+     if (savedScheme) schemeSelect.value = savedScheme;
+});
+
+document.getElementById("configureProxyButton").addEventListener("click", () => {
+     const proxyAddress = proxyInput.value;
+     const scheme = schemeSelect.value
+     localStorage.setItem("proxyAddress", proxyAddress);
+     localStorage.setItem("scheme", scheme);
+     chrome.runtime.sendMessage({ type: "setProxy", address: proxyAddress, scheme: scheme })
+});
+
+document.getElementById("resetProxyButton").addEventListener("click", () => {
+     chrome.runtime.sendMessage({ type: "resetProxy" });
 });
