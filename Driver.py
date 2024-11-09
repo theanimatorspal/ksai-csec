@@ -6,18 +6,13 @@ from testing import ria_cross_domain_policy
 from testing import forced_browsing
 from testing import subdomain_enumeration
 from testing import android_manifest
+from testing import port_scan
 
-folder = "targets/ring/"
-domain = "https://ring.com"
 
-# subdomain_enumeration.RunAmass(
-#                     domain,
-#                     globals.all_subdomains_list,
-#                     folder + "subdomains.txt"
-#           )
+def GeneralRecon(inFolder, inDomain):
+     # port_scan.Run(ip=inDomain, output_file=inFolder + "open_ports.txt")
+     # subdomain_enumeration.RunSubfinder(inDomain, inFolder + "subdomains.txt")
+     # subdomain_enumeration.RunFindAlive(inFolder + "subdomains.txt", inFolder + "alive_subdomains.txt")
+     forced_browsing.RunGobuster(inDomain, inFolder + "forced.txt")
 
-forced_browsing.Run(domain,
-                    folder + "forced_browsing.txt",
-                    globals.all_content_discovery)
-
-# android_manifest.Run(folder + "AndroidManifestimm.xml", folder + "imm_manifest.txt")
+GeneralRecon("targets/quixel/", "quixel.com")

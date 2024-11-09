@@ -251,3 +251,29 @@ chrome.runtime.onMessage.addListener(
           }
      }
 );
+
+chrome.runtime.onMessage.addListener(
+     function (arg, sender, sendResponse) {
+          if (arg.type == "getTabsData") {
+               chrome.tabs.query({}, async (tabs) => {
+                    try {
+                         const tabData = [];
+                         for (const tab of tabs) {
+                              const tabContent = await chrome.scripting.executeScript({
+                                   target: { tabId: tab.id },
+                                   func: () => document.body.innerText
+                              });
+                              tabData.push({ url: tab.url, content: tabContent[0].result });
+                         }
+                         sendResponse(tabData);
+                         if (chrome.runtime.lastError) {
+                              console.error("Runtime error after sending response: ", chrome.runtime.lastError);
+                         }
+                    } catch (error) {
+                         console.error("ERROR gathering the table data ", error);
+                    }
+               });
+               return true;
+          }
+     }
+)

@@ -81,6 +81,8 @@ document.getElementById("startDorking").addEventListener("click", () => {
           `site:${targetDomain} intext:"password"`,
           `site:${targetDomain} intext:"API_KEY"`,
           `site:${targetDomain} intext:"Authorization: Bearer"`,
+          `site:${targetDomain} inurl: "/view.shtml" inurl: "axis-cgi"`,
+          `site:${targetDomain} inurl: "amazonaws.com" inurl: "/bucket/" -site: aws.amazon.com`,
 
           `cache:${targetDomain}`,
      ];
@@ -95,13 +97,33 @@ document.getElementById("startDorking").addEventListener("click", () => {
 document.getElementById("startBrowsing").addEventListener("click", () => {
      const targetDomains = document.getElementById("domainsInput").
           value.
+          trim().
           split('\n').
           map(domain => domain.trim()).
-          filter(domain => domain); // Creates a new array
+          filter(domain => domain);
 
-     targetDomains.forEach(domain => {
-          chrome.tabs.create({ domain });
+     targetDomains.forEach(url => {
+          chrome.tabs.create({ url });
      })
+});
+
+document.getElementById("getTabsDataButton").addEventListener("click", () => {
+     chrome.runtime.sendMessage({ type: "getTabsData" }, (tabsData) => {
+          if (!tabsData) {
+               console.error("Error retrieving tabs data:", chrome.runtime.lastError);
+               return;
+          }
+
+          const csvContent = "data:text/csv;charset=utf-8," +
+               tabsData.map(tab => `"${tab.url}","${tab.content.replace(/"/g, '""')}"`).join("\n");
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "tabs_data.csv");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+     });
 });
 
 document.getElementById("spinnerExtractDepth").addEventListener("change", async () => {
