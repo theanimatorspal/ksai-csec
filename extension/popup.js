@@ -1,4 +1,35 @@
 
+async function Popup(inmessage) {
+     function showPopup(message) {
+          const popup = document.createElement("div");
+          popup.textContent = message;
+          Object.assign(popup.style, {
+               position: "fixed",
+               bottom: "20px",
+               right: "50px",
+               padding: "10px",
+               backgroundColor: "rgba(1, 0, 0, 0.8)",
+               color: "white",
+               borderRadius: "5px",
+               zIndex: "10000",
+          });
+
+          document.body.appendChild(popup);
+
+          // Remove the popup after 5 seconds
+          setTimeout(() => {
+               popup.remove();
+          }, 5000);
+     }
+     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+     chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: showPopup,
+          args: [inmessage]
+     }).then(
+          () => console.log("Script Executed")
+     );
+}
 
 
 
@@ -95,16 +126,20 @@ document.getElementById("startDorking").addEventListener("click", () => {
 });
 
 document.getElementById("startBrowsing").addEventListener("click", () => {
-     const targetDomains = document.getElementById("domainsInput").
-          value.
-          trim().
-          split('\n').
-          map(domain => domain.trim()).
-          filter(domain => domain);
+     const targetDomains = document.getElementById("domainsInput")
+          .value
+          .trim()
+          .split('\n')
+          .map(domain => {
+               domain = domain.trim();
+               return domain.startsWith('http') ? domain : `https://${domain}`;
+          })
+          .filter(domain => domain);
 
      targetDomains.forEach(url => {
           chrome.tabs.create({ url });
-     })
+     });
+
 });
 
 document.getElementById("getTabsDataButton").addEventListener("click", () => {
@@ -191,4 +226,21 @@ document.getElementById("configureProxyButton").addEventListener("click", () => 
 
 document.getElementById("resetProxyButton").addEventListener("click", () => {
      chrome.runtime.sendMessage({ type: "resetProxy" });
+});
+
+document.getElementById("testInputValidation").addEventListener("click", (event) => {
+});
+
+document.getElementById("testInputValidationStartRecording").addEventListener("click", (event) => {
+     Popup("Recording Started");
+     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          chrome.tabs.sendMessage(tabs[0].id, { type: "startRecording" });
+     });
+});
+
+document.getElementById("testInputValidationEndRecording").addEventListener("click", (event) => {
+     Popup("Recording Ended");
+     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          chrome.tabs.sendMessage(tabs[0].id, { type: "endRecording" });
+     });
 });

@@ -30,8 +30,8 @@ def Run(domain, filepath, wordlist):
     print("Forced browsing scan completed. Results saved.")
 
 
-def RunGobuster(domain, output_file, wordlist="/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt"):
-    command = ["gobuster", "dir", "-u", f"{domain}", "-w", wordlist, "-o", output_file, "-k", "-b", "403"]
+def RunGobuster(domain, output_file, wordlist="/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt", exclude="403,301,302"):
+    command = ["gobuster", "dir", "-u", f"{domain}", "-w", wordlist, "-o", output_file, "-k", "-b", exclude]
     
     try:
         result = subprocess.run(command, capture_output=True, text=True)

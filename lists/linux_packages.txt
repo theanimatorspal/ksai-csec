@@ -4,3 +4,6 @@ dirsearch
 httpx-toolkit
 sublist3r
 katana (go)
+exiftool
+gf
+dalfox
