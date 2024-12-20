@@ -4,3 +4,30 @@
 [submodule "PayloadsAllTheThings"]
 	path = PayloadsAllTheThings
 	url = https://github.com/swisskyrepo/PayloadsAllTheThings.git
+[submodule "community-scripts"]
+	path = community-scripts
+	url = https://github.com/zaproxy/community-scripts.git
+[submodule "SecLists"]
+	path = SecLists
+	url = https://github.com/danielmiessler/SecLists.git
+[submodule "zaproxy"]
+	path = zaproxy
+	url = https://github.com/zaproxy/zaproxy.git
+[submodule "zap-extensions"]
+	path = zap-extensions
+	url = https://github.com/zaproxy/zap-extensions.git
+[submodule "baserunner"]
+	path = baserunner
+	url = https://github.com/iosiro/baserunner.git
+[submodule "github-dorks"]
+	path = github-dorks
+	url = https://github.com/techgaun/github-dorks.git
+[submodule "haptyc"]
+	path = haptyc
+	url = https://github.com/defparam/haptyc.git
+[submodule "ActiveScanPlusPlus"]
+	path = ActiveScanPlusPlus
+	url = https://github.com/albinowax/ActiveScanPlusPlus.git
+[submodule "h2csmuggler"]
+	path = h2csmuggler
+	url = https://github.com/BishopFox/h2csmuggler.git
