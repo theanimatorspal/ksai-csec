@@ -1,7 +1,7 @@
 let InfoText = ""
 const hud = document.createElement("div");
 hud.id = "floatingHUD";
-hud.style.position = "fixed";
+// hud.style.position = "fixed";
 hud.style.top = "10px";
 hud.style.right = "10px";
 hud.style.width = "200px";

@@ -277,3 +277,77 @@ chrome.runtime.onMessage.addListener(
           }
      }
 )
+
+chrome.runtime.onInstalled.addListener(() => {
+     chrome.contextMenus.create({
+          id: "open-multiple-links",
+          title: "Open Multiple Links in New Tabs",
+          contexts: ["selection"]
+     });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+     if (info.menuItemId === "open-multiple-links") {
+          chrome.scripting.executeScript({
+               target: { tabId: tab.id },
+               function: extractAndOpenLinks
+          });
+     }
+});
+
+// This function runs in the context of the webpage
+function extractAndOpenLinks() {
+     const selection = window.getSelection();
+     if (!selection.rangeCount) return;
+
+     const range = selection.getRangeAt(0);
+     const container = range.commonAncestorContainer;
+     const parentElement = container.nodeType === 3 ? container.parentElement : container;
+
+     // Find all <a> elements within the selection
+     const links = Array.from(parentElement.querySelectorAll('a'));
+     const hrefs = links.map(link => link.href).filter(href => href); // Filter out empty hrefs
+
+     if (hrefs.length > 0) {
+          hrefs.forEach(href => window.open(href, '_blank'));
+     } else {
+          alert("No links found in the selected text or its parent container.");
+     }
+}
+
+
+
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////
+chrome.runtime.onInstalled.addListener(() => {
+     chrome.contextMenus.create({
+          id: "scanJSFiles",
+          title: "Scan JavaScript Files",
+          contexts: ["page"]
+     });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+     if (info.menuItemId === "scanJSFiles" && tab.id) {
+          chrome.scripting.executeScript({
+               target: { tabId: tab.id },
+               files: ["scan.js"]
+          });
+     }
+});

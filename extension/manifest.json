@@ -32,10 +32,12 @@
                ],
                "js": [
                     "content.js",
-                    "hud.js"
+                    "hud.js",
+                    "libs/prism.js"
                ],
                "css": [
-                    "hud.css"
+                    "hud.css",
+                    "libs/prism.css"
                ]
           }
      ]

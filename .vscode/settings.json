@@ -143,5 +143,6 @@
     "Lua.diagnostics.globals": [
         "StateId"
     ],
-    "vim.enableNeovim": true
+    "vim.enableNeovim": true,
+    "java.compile.nullAnalysis.mode": "disabled"
 }

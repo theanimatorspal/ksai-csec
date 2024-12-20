@@ -125,6 +125,80 @@ document.getElementById("startDorking").addEventListener("click", () => {
      });
 });
 
+document.getElementById("startGithubDorking").addEventListener("click", () => {
+
+     // Define categories with associated dork queries
+     const categories = {
+          general: [
+               "Jenkins", "OTP", "oauth", "authorization", "password", "pwd", "ftp", "dotfiles", "JDBC", "key-keys",
+               "send_key-keys", "send,key-keys", "token", "user", "login-singin", "passkey-passkeys", "pass", "secret",
+               "SecretAccessKey", "app_AWS_SECRET_ACCESS_KEY AWS_SECRET_ACCESS_KEY", "credentials", "config",
+               "security_credentials", "connectionstring", "ssh2_auth_password", "DB_PASSWORD"
+          ],
+          bash: [
+               "language:bash Jenkins", "language:bash OTP", "language:bash oauth", "language:bash authorization",
+               "language:bash password", "language:bash pwd", "language:bash ftp", "language:bash dotfiles",
+               "language:bash JDBC", "language:bash key-keys", "language:bash send_key-keys", "language:bash send,key-keys",
+               "language:bash token", "language:bash user", "language:bash login-singin", "language:bash passkey-passkeys",
+               "language:bash pass", "language:bash secret", "language:bash SecretAccessKey",
+               "language:bash app_AWS_SECRET_ACCESS_KEY AWS_SECRET_ACCESS_KEY", "language:bash credentials",
+               "language:bash config", "language:bash security_credentials", "language:bash connectionstring",
+               "language:bash ssh2_auth_password", "language:bash DB_PASSWORD"
+          ],
+          python: [
+               "language:python Jenkins", "language:python OTP", "language:python oauth", "language:python authorization",
+               "language:python password", "language:python pwd", "language:python ftp", "language:python dotfiles",
+               "language:python JDBC", "language:python key-keys", "language:python send_key-keys", "language:python send,key-keys",
+               "language:python token", "language:python user", "language:python login-singin", "language:python passkey-passkeys",
+               "language:python pass", "language:python secret", "language:python SecretAccessKey",
+               "language:python app_AWS_SECRET_ACCESS_KEY AWS_SECRET_ACCESS_KEY", "language:python credentials",
+               "language:python config", "language:python security_credentials", "language:python connectionstring",
+               "language:python ssh2_auth_password", "language:python DB_PASSWORD"
+          ]
+     };
+
+     // Sequentially process URLs for a single category
+     const processUrlsSequentially = (urls, windowId, index = 0) => {
+          if (index >= urls.length) return; // End of URLs
+
+          // Open the next URL in a new tab
+          chrome.tabs.create({ windowId, url: urls[index] }, () => {
+               // Process the next URL after a short delay to prevent overloading
+               setTimeout(() => {
+                    processUrlsSequentially(urls, windowId, index + 1);
+               }, 2500);
+          });
+     };
+
+     // Function to execute searches with controlled concurrency
+     const executeDorks = (domain) => {
+          if (!domain) {
+               alert("Please enter a target domain.");
+               return;
+          }
+
+          // Loop through each category
+          Object.entries(categories).forEach(([category, dorks]) => {
+               const urls = dorks.map(dork => {
+                    const query = `${domain} ${dork}`;
+                    return `https://www.github.com/search?q=${encodeURIComponent(query)}&type=code`;
+               });
+
+               // Create a new Chrome window for the category
+               chrome.windows.create({ url: [], type: "normal" }, (newWindow) => {
+                    // Process URLs sequentially in the new window
+                    processUrlsSequentially(urls, newWindow.id);
+               });
+          });
+     };
+
+     const targetDork = document.getElementById("domainInput").value.trim();
+     executeDorks(targetDork);
+
+});
+
+
+
 document.getElementById("startBrowsing").addEventListener("click", () => {
      const targetDomains = document.getElementById("domainsInput")
           .value
